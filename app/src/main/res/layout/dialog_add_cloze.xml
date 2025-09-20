@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        style="@style/TextAppearance.Material3.LabelLarge"
+        android:text="Texto com Omissões"
+        android:layout_marginBottom="4dp"/>
+
+    <EditText
+        android:id="@+id/cloze_edit_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minLines="3"
+        android:gravity="top"
+        android:hint="Ex: A Terra gira em torno do [[sol]]."
+        android:inputType="textCapSentences|textMultiLine" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        style="@style/TextAppearance.Material3.BodySmall"
+        android:layout_marginTop="8dp"
+        android:text="Dica: coloque as palavras a serem omitidas entre colchetes duplos, como [[exemplo]]."/>
+
+</LinearLayout>

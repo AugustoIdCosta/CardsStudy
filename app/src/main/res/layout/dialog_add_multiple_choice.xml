@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Pergunta"
+        android:labelFor="@id/mc_question_edit_text"
+        style="@style/TextAppearance.Material3.LabelLarge"
+        android:layout_marginBottom="4dp"/>
+
+    <EditText
+        android:id="@+id/mc_question_edit_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Qual a capital do Brasil?"
+        android:inputType="textCapSentences" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Resposta Correta"
+        android:labelFor="@id/mc_correct_answer_edit_text"
+        style="@style/TextAppearance.Material3.LabelLarge"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="4dp"/>
+
+    <EditText
+        android:id="@+id/mc_correct_answer_edit_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Brasília"
+        android:inputType="textCapSentences" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Respostas Incorretas (Distratores)"
+        style="@style/TextAppearance.Material3.LabelLarge"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="4dp"/>
+
+    <EditText
+        android:id="@+id/mc_distractor1_edit_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Distrator 1 (ex: Rio de Janeiro)"
+        android:inputType="textCapSentences" />
+
+    <EditText
+        android:id="@+id/mc_distractor2_edit_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Distrator 2 (ex: São Paulo)"
+        android:inputType="textCapSentences" />
+
+    <EditText
+        android:id="@+id/mc_distractor3_edit_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Distrator 3 (opcional)"
+        android:inputType="textCapSentences" />
+
+</LinearLayout>

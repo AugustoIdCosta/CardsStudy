@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "383394097924",
+    "project_id": "cardsstudya",
+    "storage_bucket": "cardsstudya.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:383394097924:android:c0d9da8a43d1d4d77ffe51",
+        "android_client_info": {
+          "package_name": "com.example.cardsstudy"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDL9mT-KEkP8T-pVLLfoevI7-f8KlOF0G4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
