@@ -201,7 +201,6 @@ class StudyActivity : AppCompatActivity() {
             Toast.makeText(this, message ?: "Incorreto!", Toast.LENGTH_SHORT).show()
         }
 
-        // Calcula a próxima revisão e atualiza o cartão no Firebase
         updateCardSrs(card)
 
         checkButton.visibility = View.GONE
@@ -224,7 +223,7 @@ class StudyActivity : AppCompatActivity() {
 
         deckId?.let {
             db.collection("decks").document(it).collection("cards").document(card.id)
-                .set(card) // Usa .set() para atualizar o cartão inteiro com os novos dados de SRS
+                .set(card) 
                 .addOnFailureListener { e ->
                     Log.w(
                         "StudyActivity",

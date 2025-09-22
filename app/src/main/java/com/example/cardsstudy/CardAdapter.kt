@@ -33,6 +33,7 @@ class CardAdapter(
 
         when (card) {
             is FrontBackCard -> {
+                // Se o cartão tem uma imagem, mostra a imagem e esconde o texto.
                 if (card.frontImageUrl != null) {
                     holder.frontTextView.visibility = View.GONE
                     holder.imageView.visibility = View.VISIBLE
@@ -40,18 +41,31 @@ class CardAdapter(
                         .load(card.frontImageUrl)
                         .into(holder.imageView)
                 } else {
+                    // Se não tem imagem, esconde a imagem e mostra o texto.
                     holder.imageView.visibility = View.GONE
                     holder.frontTextView.visibility = View.VISIBLE
                     holder.frontTextView.text = card.front
                 }
             }
+
             is MultipleChoiceCard -> {
+                // Garante que a imagem está escondida e o texto visível.
+                holder.imageView.visibility = View.GONE
+                holder.frontTextView.visibility = View.VISIBLE
                 holder.frontTextView.text = "[Múltipla Escolha] ${card.question}"
             }
+
             is TypeAnswerCard -> {
+                // Garante que a imagem está escondida e o texto visível.
+                holder.imageView.visibility = View.GONE
+                holder.frontTextView.visibility = View.VISIBLE
                 holder.frontTextView.text = "[Digite a Resposta] ${card.prompt}"
             }
+
             is ClozeCard -> {
+                // Garante que a imagem está escondida e o texto visível.
+                holder.imageView.visibility = View.GONE
+                holder.frontTextView.visibility = View.VISIBLE
                 holder.frontTextView.text = "[Omissão] ${card.textWithCloze}"
             }
         }
