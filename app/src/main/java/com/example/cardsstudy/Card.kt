@@ -25,7 +25,8 @@ enum class CardType {
 // 1. Frente e Verso (o que já tínhamos)
 data class FrontBackCard(
     val front: String = "",
-    val back: String = ""
+    val back: String = "",
+    val frontImageUrl: String? = null
 ) : Card() {
     init {
         type = CardType.FRONT_BACK

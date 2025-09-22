@@ -6,7 +6,9 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.EditText
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
@@ -40,10 +42,8 @@ class MainActivity : AppCompatActivity() {
 
         setupRecyclerView()
 
-        // A chamada para loadDecks() é removida daqui para não ser executada apenas uma vez.
-
         findViewById<FloatingActionButton>(R.id.fab_add_deck).setOnClickListener {
-            // Lógica para adicionar novo baralho
+            showAddDeckDialog()
         }
     }
 
@@ -62,6 +62,10 @@ class MainActivity : AppCompatActivity() {
         return when (item.itemId) {
             R.id.action_global_analytics -> {
                 startActivity(Intent(this, AnalyticsActivity::class.java))
+                true
+            }
+            R.id.action_locations -> {
+                startActivity(Intent(this, LocationsActivity::class.java))
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -103,6 +107,44 @@ class MainActivity : AppCompatActivity() {
             }
             .addOnFailureListener { e ->
                 Log.e("MainActivity", "Erro ao apagar baralho", e)
+            }
+    }
+    private fun showAddDeckDialog() {
+        // Usamos o mesmo layout que criámos para os cartões, mas podemos criar um específico se quiser
+        val dialogView = layoutInflater.inflate(R.layout.dialog_add_deck, null)
+        val nameEditText = dialogView.findViewById<EditText>(R.id.deck_name_edit_text)
+        val descriptionEditText = dialogView.findViewById<EditText>(R.id.deck_description_edit_text)
+
+        AlertDialog.Builder(this)
+            .setTitle("Novo Baralho")
+            .setView(dialogView)
+            .setPositiveButton("Guardar") { _, _ ->
+                val name = nameEditText.text.toString().trim()
+                val description = descriptionEditText.text.toString().trim()
+                if (name.isNotEmpty()) {
+                    saveNewDeck(name, description)
+                } else {
+                    Toast.makeText(this, "O nome não pode ser vazio.", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    private fun saveNewDeck(name: String, description: String) {
+        val user = auth.currentUser ?: return
+        val newDeck = Deck(
+            name = name,
+            description = description,
+            userId = user.uid
+        )
+        db.collection("decks").add(newDeck)
+            .addOnSuccessListener {
+                Toast.makeText(this, "Baralho guardado!", Toast.LENGTH_SHORT).show()
+                loadDecks() // Atualiza a lista
+            }
+            .addOnFailureListener { e ->
+                Log.e("MainActivity", "Erro ao guardar baralho", e)
             }
     }
 

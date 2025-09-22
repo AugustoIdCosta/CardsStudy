@@ -7,10 +7,12 @@ import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.bumptech.glide.Glide
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -23,8 +25,11 @@ class StudyActivity : AppCompatActivity() {
     companion object {
         const val EXTRA_DECK_ID = "extra_deck_id"
         const val EXTRA_DECK_NAME = "extra_deck_name"
+        const val EXTRA_LOCATION_ID = "extra_location_id"
+        const val EXTRA_LOCATION_NAME = "extra_location_name"
     }
 
+    private lateinit var studyFrontImage: ImageView
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
     private var allCards = listOf<Card>()
@@ -62,6 +67,7 @@ class StudyActivity : AppCompatActivity() {
         initializeViews()
         nextButton.setOnClickListener { goToNextCard() }
         loadCards(deckId!!)
+
     }
 
     private fun initializeViews() {
@@ -82,6 +88,7 @@ class StudyActivity : AppCompatActivity() {
         taContainer = findViewById(R.id.type_answer_container)
         taPromptText = findViewById(R.id.ta_study_prompt)
         taAnswerEditText = findViewById(R.id.ta_study_answer_edit_text)
+        studyFrontImage = findViewById(R.id.study_front_image)
     }
 
     private fun loadCards(deckId: String) {
@@ -130,14 +137,19 @@ class StudyActivity : AppCompatActivity() {
     }
 
     private fun saveStudySession() {
-        val user = auth.currentUser
-            ?: run { navigateToSummary(); return } // Garante que navega mesmo sem utilizador
+        val user = auth.currentUser ?: run { navigateToSummary(); return }
+
+        val locationId = intent.getStringExtra(EXTRA_LOCATION_ID) ?: ""
+        val locationName = intent.getStringExtra(EXTRA_LOCATION_NAME) ?: "Geral"
+
         val session = StudySession(
             userId = user.uid,
             deckId = deckId ?: "",
             deckName = intent.getStringExtra(EXTRA_DECK_NAME) ?: "",
             correctCount = correctAnswers,
-            incorrectCount = incorrectAnswers
+            incorrectCount = incorrectAnswers,
+            locationId = locationId,
+            locationName = locationName
         )
         db.collection("studySessions")
             .add(session)
@@ -199,11 +211,11 @@ class StudyActivity : AppCompatActivity() {
     private fun updateCardSrs(card: Card) {
         val calendar = Calendar.getInstance()
         val intervals = mapOf(
-            0 to 1,  // 1 minuto
-            1 to 5,  // 5 minutos
-            2 to 10, // 10 minutos
-            3 to 60, // 1 hora
-            4 to 180 // 3 horas
+            0 to 1,
+            1 to 5,
+            2 to 5,
+            3 to 5,
+            4 to 5
 
         )
         val minutesToAdd = intervals[card.srsLevel] ?: intervals.values.last()
@@ -225,6 +237,7 @@ class StudyActivity : AppCompatActivity() {
 
     private fun displayFrontBackCard(card: FrontBackCard) {
         frontBackContainer.visibility = View.VISIBLE
+
         checkButton.text = "Verificar Resposta"
         frontText.text = card.front
         backText.text = "Resposta: ${card.back}"
@@ -232,6 +245,15 @@ class StudyActivity : AppCompatActivity() {
         frontText.visibility = View.VISIBLE
         fbClozeAnswerEditText.visibility = View.VISIBLE
         backText.visibility = View.GONE
+        if (card.frontImageUrl != null) {
+            frontText.visibility = View.GONE
+            studyFrontImage.visibility = View.VISIBLE
+            Glide.with(this).load(card.frontImageUrl).into(studyFrontImage)
+        } else {
+            studyFrontImage.visibility = View.GONE
+            frontText.visibility = View.VISIBLE
+            frontText.text = card.front
+        }
 
         checkButton.setOnClickListener {
             val userAnswer = fbClozeAnswerEditText.text.toString().trim()

@@ -39,6 +39,13 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:layout_gravity="center">
+            <ImageView
+                android:id="@+id/study_front_image"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:scaleType="centerInside"
+                android:visibility="gone"
+                tools:src="@tools:sample/backgrounds/scenic" />
             <TextView
                 android:id="@+id/study_front_text"
                 android:layout_width="wrap_content"

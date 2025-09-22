@@ -9,5 +9,8 @@ data class StudySession(
     val deckName: String = "",
     val correctCount: Int = 0,
     val incorrectCount: Int = 0,
-    @ServerTimestamp val timestamp: Date? = null
+    @ServerTimestamp val timestamp: Date? = null,
+
+    val locationId: String = "",
+    val locationName: String = ""
 )

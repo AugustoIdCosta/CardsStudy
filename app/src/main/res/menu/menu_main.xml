@@ -6,4 +6,9 @@
         android:title="Histórico Geral"
         android:icon="@drawable/ic_analytics"
         app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_locations"
+        android:title="Locais de Estudo"
+        android:icon="@drawable/ic_location"
+        app:showAsAction="ifRoom" />
 </menu>

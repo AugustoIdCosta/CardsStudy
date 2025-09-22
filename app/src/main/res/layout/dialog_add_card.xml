@@ -6,31 +6,33 @@
     android:orientation="vertical"
     android:padding="24dp">
 
-    <com.google.android.material.textfield.TextInputLayout
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+    <ImageView
+        android:id="@+id/card_image_preview"
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
+        android:scaleType="centerCrop"
+        android:visibility="gone"
+        android:layout_marginBottom="16dp"/>
+
+    <Button
+        android:id="@+id/select_image_button"
+        style="@style/Widget.Material3.Button.OutlinedButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Frente do Cartão">
+        android:text="Selecionar Imagem (Opcional)" />
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/card_front_edit_text"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
-    </com.google.android.material.textfield.TextInputLayout>
-
-    <com.google.android.material.textfield.TextInputLayout
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+    <EditText
+        android:id="@+id/card_front_edit_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:hint="Verso do Cartão">
+        android:hint="Frente do Cartão (texto opcional)" />
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/card_back_edit_text"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
-    </com.google.android.material.textfield.TextInputLayout>
+    <EditText
+        android:id="@+id/card_back_edit_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:hint="Verso do Cartão" />
 
 </LinearLayout>

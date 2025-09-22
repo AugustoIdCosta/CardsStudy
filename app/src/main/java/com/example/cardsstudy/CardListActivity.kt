@@ -1,19 +1,27 @@
 package com.example.cardsstudy
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
+import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
+import java.util.UUID
 
 class CardListActivity : AppCompatActivity() {
 
@@ -23,9 +31,21 @@ class CardListActivity : AppCompatActivity() {
     }
 
     private val db = FirebaseFirestore.getInstance()
+    private val auth = FirebaseAuth.getInstance()
+    private val storage = FirebaseStorage.getInstance()
     private lateinit var cardsRecyclerView: RecyclerView
     private lateinit var adapter: CardAdapter
     private var deckId: String? = null
+
+    private var selectedImageUri: Uri? = null
+    private lateinit var cardImagePreview: ImageView
+    private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let {
+            selectedImageUri = it
+            cardImagePreview.setImageURI(it)
+            cardImagePreview.visibility = View.VISIBLE
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -62,22 +82,54 @@ class CardListActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_study -> {
-                deckId?.let {
-                    val intent = Intent(this, StudyActivity::class.java).apply {
-                        putExtra(StudyActivity.EXTRA_DECK_ID, it)
-                        putExtra(StudyActivity.EXTRA_DECK_NAME, intent.getStringExtra(EXTRA_DECK_NAME))
-                    }
-                    startActivity(intent)
-                }
+                showLocationSelectorDialog()
                 true
             }
             else -> super.onOptionsItemSelected(item)
         }
     }
 
+    private fun showLocationSelectorDialog() {
+        val user = auth.currentUser ?: return
+        db.collection("studyLocations").whereEqualTo("userId", user.uid).get()
+            .addOnSuccessListener { querySnapshot ->
+                val locations = mutableListOf<StudyLocation>()
+                for (document in querySnapshot.documents) {
+                    val location = document.toObject(StudyLocation::class.java)
+                    location?.let {
+                        it.id = document.id
+                        locations.add(it)
+                    }
+                }
+                val locationNames = mutableListOf("Estudo Geral (sem local)")
+                locations.forEach { locationNames.add(it.name) }
+
+                AlertDialog.Builder(this)
+                    .setTitle("Onde está a estudar?")
+                    .setItems(locationNames.toTypedArray()) { _, which ->
+                        val selectedLocation = if (which == 0) null else locations[which - 1]
+                        startStudySession(selectedLocation)
+                    }
+                    .show()
+            }
+            .addOnFailureListener { startStudySession(null) }
+    }
+
+    private fun startStudySession(location: StudyLocation?) {
+        val deckName = intent.getStringExtra(EXTRA_DECK_NAME)
+        val intent = Intent(this, StudyActivity::class.java).apply {
+            putExtra(StudyActivity.EXTRA_DECK_ID, deckId)
+            putExtra(StudyActivity.EXTRA_DECK_NAME, deckName)
+            location?.let {
+                putExtra(StudyActivity.EXTRA_LOCATION_ID, it.id)
+                putExtra(StudyActivity.EXTRA_LOCATION_NAME, it.name)
+            }
+        }
+        startActivity(intent)
+    }
+
     private fun showCardTypeSelectorDialog() {
         val cardTypes = arrayOf("Frente e Verso", "Múltipla Escolha", "Digite a Resposta", "Omissão (Cloze)")
-
         AlertDialog.Builder(this)
             .setTitle("Selecione o Tipo de Cartão")
             .setItems(cardTypes) { _, which ->
@@ -95,21 +147,45 @@ class CardListActivity : AppCompatActivity() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_add_card, null)
         val frontEditText = dialogView.findViewById<EditText>(R.id.card_front_edit_text)
         val backEditText = dialogView.findViewById<EditText>(R.id.card_back_edit_text)
-
+        val selectImageButton = dialogView.findViewById<Button>(R.id.select_image_button)
+        cardImagePreview = dialogView.findViewById(R.id.card_image_preview)
+        selectedImageUri = null
+        cardImagePreview.visibility = View.GONE
+        selectImageButton.setOnClickListener { pickImageLauncher.launch("image/*") }
         AlertDialog.Builder(this)
             .setTitle("Novo Cartão (Frente e Verso)")
             .setView(dialogView)
             .setPositiveButton("Salvar") { _, _ ->
-                val front = frontEditText.text.toString().trim()
-                val back = backEditText.text.toString().trim()
-                if (front.isNotEmpty() && back.isNotEmpty()) {
-                    saveNewCard(FrontBackCard(front, back))
-                } else {
-                    Toast.makeText(this, "Preencha a frente e o verso.", Toast.LENGTH_SHORT).show()
+                val frontText = frontEditText.text.toString().trim()
+                val backText = backEditText.text.toString().trim()
+                if (backText.isEmpty() || (frontText.isEmpty() && selectedImageUri == null)) {
+                    Toast.makeText(this, "Preencha o verso e um campo da frente (texto ou imagem).", Toast.LENGTH_LONG).show()
+                    return@setPositiveButton
                 }
+                uploadImageAndSaveCard(frontText, backText)
             }
             .setNegativeButton("Cancelar", null)
             .show()
+    }
+
+    private fun uploadImageAndSaveCard(frontText: String, backText: String) {
+        if (selectedImageUri != null) {
+            val imageRef = storage.reference.child("card_images/${UUID.randomUUID()}")
+            imageRef.putFile(selectedImageUri!!)
+                .continueWithTask { task ->
+                    if (!task.isSuccessful) { task.exception?.let { throw it } }
+                    imageRef.downloadUrl
+                }.addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val downloadUrl = task.result.toString()
+                        saveNewCard(FrontBackCard(frontText, backText, downloadUrl))
+                    } else {
+                        Toast.makeText(this, "Falha no upload da imagem.", Toast.LENGTH_SHORT).show()
+                    }
+                }
+        } else {
+            saveNewCard(FrontBackCard(frontText, backText, null))
+        }
     }
 
     private fun showAddMultipleChoiceDialog() {
@@ -119,7 +195,6 @@ class CardListActivity : AppCompatActivity() {
         val distractor1Et = dialogView.findViewById<EditText>(R.id.mc_distractor1_edit_text)
         val distractor2Et = dialogView.findViewById<EditText>(R.id.mc_distractor2_edit_text)
         val distractor3Et = dialogView.findViewById<EditText>(R.id.mc_distractor3_edit_text)
-
         AlertDialog.Builder(this)
             .setTitle("Novo Cartão (Múltipla Escolha)")
             .setView(dialogView)
@@ -131,7 +206,6 @@ class CardListActivity : AppCompatActivity() {
                     distractor2Et.text.toString().trim().takeIf { it.isNotEmpty() },
                     distractor3Et.text.toString().trim().takeIf { it.isNotEmpty() }
                 )
-
                 if (question.isNotEmpty() && correctAnswer.isNotEmpty() && distractors.isNotEmpty()) {
                     saveNewCard(MultipleChoiceCard(question, correctAnswer, distractors))
                 } else {
@@ -146,14 +220,12 @@ class CardListActivity : AppCompatActivity() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_add_type_answer, null)
         val promptEt = dialogView.findViewById<EditText>(R.id.ta_prompt_edit_text)
         val answersEt = dialogView.findViewById<EditText>(R.id.ta_answers_edit_text)
-
         AlertDialog.Builder(this)
             .setTitle("Novo Cartão (Digite a Resposta)")
             .setView(dialogView)
             .setPositiveButton("Salvar") { _, _ ->
                 val prompt = promptEt.text.toString().trim()
                 val answersString = answersEt.text.toString().trim()
-
                 if (prompt.isNotEmpty() && answersString.isNotEmpty()) {
                     val acceptableAnswers = answersString.split(',').map { it.trim() }
                     saveNewCard(TypeAnswerCard(prompt, acceptableAnswers))
@@ -168,7 +240,6 @@ class CardListActivity : AppCompatActivity() {
     private fun showAddClozeDialog() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_add_cloze, null)
         val clozeEt = dialogView.findViewById<EditText>(R.id.cloze_edit_text)
-
         AlertDialog.Builder(this)
             .setTitle("Novo Cartão (Omissão)")
             .setView(dialogView)
@@ -216,11 +287,10 @@ class CardListActivity : AppCompatActivity() {
                 .delete()
                 .addOnSuccessListener {
                     Toast.makeText(this, "Cartão apagado.", Toast.LENGTH_SHORT).show()
-                    loadCards(deckId) // Recarrega a lista para refletir a exclusão
+                    loadCards(deckId)
                 }
                 .addOnFailureListener { e ->
                     Log.e("CardListActivity", "Erro ao apagar cartão", e)
-                    Toast.makeText(this, "Falha ao apagar o cartão.", Toast.LENGTH_SHORT).show()
                 }
         }
     }
@@ -248,7 +318,6 @@ class CardListActivity : AppCompatActivity() {
                         cardList.add(it)
                     }
                 }
-                // A criação do adapter agora inclui a lógica de exclusão
                 adapter = CardAdapter(cardList) { cardToDelete ->
                     showDeleteCardConfirmationDialog(cardToDelete)
                 }
