@@ -1,0 +1,56 @@
+# CogniCard: Sistema de Estudo Inteligente
+
+CogniCard é um aplicativo Android nativo, desenvolvido em Kotlin, projetado para ser uma ferramenta de estudo poderosa e adaptável. Ele vai além dos flashcards tradicionais, incorporando um Sistema de Repetição Espaçada (SRS), múltiplos formatos de cartão e análise de desempenho baseada em geolocalização para ajudar os utilizadores a otimizar as suas sessões de estudo.
+
+## Funcionalidades Principais
+
+* **Autenticação de Utilizadores:** Sistema seguro de registo e login com Firebase Authentication.
+* **Gestão de Baralhos e Cartões (CRUD):**
+    * Criação, leitura e exclusão de baralhos.
+    * Criação, leitura e exclusão de cartões dentro de cada baralho.
+* **Múltiplos Tipos de Cartão:**
+    * **Frente e Verso:** Tradicional, com suporte para texto e imagens.
+    * **Múltipla Escolha:** Questões com uma resposta correta e múltiplos distratores.
+    * **Digite a Resposta:** O utilizador digita a resposta, que é verificada contra uma lista de respostas aceitáveis.
+    * **Omissão (Cloze):** Textos com lacunas para serem preenchidas.
+* **Sistema de Repetição Espaçada (SRS):**
+    * Cada cartão tem um nível de dificuldade (`srsLevel`) e uma data para a próxima revisão (`nextReview`).
+    * O intervalo de revisão aumenta com os acertos e diminui com os erros.
+    * A sessão de estudo carrega apenas os cartões que estão prontos para serem revistos.
+* **Funcionalidades de Geolocalização:**
+    * Integração com Google Maps para visualizar a localização atual.
+    * Permite ao utilizador guardar até 7 locais de estudo favoritos.
+    * Gestão (visualização em lista e exclusão) dos locais guardados.
+* **Perfil e Analytics:**
+    * Tela de perfil com informações da conta e opção de logout.
+    * **Análise Espacial:** Painel visual com gráficos (usando MPAndroidChart) que mostra o desempenho geral e permite filtrar o histórico de sessões de estudo por local.
+
+## Tecnologias Utilizadas
+
+* **Linguagem:** Kotlin
+* **Arquitetura:** Android SDK (View System)
+* **Base de Dados:** Firebase Firestore
+* **Autenticação:** Firebase Authentication
+* **Armazenamento de Ficheiros:** Firebase Cloud Storage (para imagens dos cartões)
+* **Geolocalização:** Google Maps SDK & Fused Location Provider
+* **Gráficos:** MPAndroidChart
+* **Carregamento de Imagens:** Glide
+
+## Configuração do Projeto
+
+Para compilar e executar o projeto, são necessários os seguintes passos:
+
+1.  **Clone o repositório.**
+2.  **Conecte ao Firebase:**
+    * Crie um novo projeto no [Firebase Console](https://console.firebase.google.com/).
+    * Adicione uma aplicação Android com o package name `com.example.cardsstudy`.
+    * Faça o download do ficheiro `google-services.json` e coloque-o na pasta `app/`.
+    * Ative os seguintes serviços no Firebase: Authentication (com provedor E-mail/Senha), Firestore Database, e Cloud Storage.
+3.  **Chave de API do Google Maps:**
+    * No [Google Cloud Console](https://console.cloud.google.com/), ative a API **"Maps SDK for Android"**.
+    * Crie uma Chave de API.
+    * Na pasta raiz do projeto Android, crie um ficheiro `local.properties`.
+    * Adicione a sua chave a esse ficheiro: `MAPS_API_KEY=SUA_CHAVE_API_AQUI`.
+4.  **Índices do Firestore:**
+    * Ao executar a tela de Analytics pela primeira vez, o Logcat irá gerar um link para criar os índices necessários no Firestore. É necessário clicar nesse link e criar os índices para que as buscas funcionem.
+5.  **Compile e execute.**
